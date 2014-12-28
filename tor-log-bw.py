@@ -1,7 +1,9 @@
 #!/usr/bin/python
+import os
 import functools
 import logging
 import time
+import argparse
 
 from logging.handlers import TimedRotatingFileHandler
 
@@ -12,7 +14,6 @@ def create_timed_rotating_log(path):
   """Create a log file that rotates at midnight to store CSV BW values"""
   logger = logging.getLogger("Rotating Log")
   logger.setLevel(logging.INFO)
-  
   handler = TimedRotatingFileHandler(path,
                                      when="MIDNIGHT",
                                      interval=1,
@@ -20,15 +21,20 @@ def create_timed_rotating_log(path):
   logger.addHandler(handler)
 
 def main():
+  parser = argparse.ArgumentParser(description=
+       "Parse the log_dir location for tor bw logs and generate graphs.")
+  parser.add_argument("log_dir", help="Location of tor-log-bw.py output logs.")
+  args = parser.parse_args()
+  log_dir = args.log_dir
+
   """Create a log file and setup the event handler for BW events"""
   with Controller.from_port(port = 9051) as controller:
     controller.authenticate()
-    
+
     """
-    TODO This try except could be eliminated and just straight up call draw_bw
-    Also, we can rename this to write_csv or something
+    TODO This try except could be eliminated and just straight up call log_bw
     """
-    log_file = "tor_bw.log"
+    log_file = os.path.join(log_dir, "tor_bw.log")
 
     create_timed_rotating_log(log_file)
     logger = logging.getLogger("Rotating Log")
@@ -46,7 +52,7 @@ def main():
 def log_bandwidth(controller):
   """Setup the event handler and then sleep indefinitely"""
   bandwidth_rates = []
-  
+
   # Making a partial that wraps the window and bandwidth_rates with a function
   # for Tor to call when it gets a BW event. This causes the output_file
   # and 'bandwidth_rates' to be provided as arguments whenever
@@ -77,7 +83,7 @@ def _handle_bandwidth_event(bandwidth_rates, event):
   # callback for when tor provides us with a BW event
   cur_time = int(time.time())
   bandwidth_rates = [cur_time, event.read, event.written]
-  
+
   log_rates(bandwidth_rates)
 
 def log_rates(bandwidth_rates):

@@ -21,11 +21,11 @@ Requires pandas, matplotlib, numpy, so run this somewhere else besides the relay
 
 Support Scripts Not Added
 -------------------------
-###fetch_files.sh
+### fetch_files.sh
 Cron
 Runs on the log server to pull the tor_bw.log files once per day from relays.
 
-###parse_logs.sh
+### parse_logs.sh
 Cron
 Runs on the log server via cron, calling tor-parse.log.py for each relay.
 
